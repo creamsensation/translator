@@ -17,8 +17,7 @@ type Translator interface {
 }
 
 type translator struct {
-	dir        string
-	fileType   string
+	config     Config
 	translates map[string]map[string]string
 }
 
@@ -28,16 +27,15 @@ const (
 	Toml = "toml"
 )
 
-func New(dir, fileType string) Translator {
+func New(config Config) Translator {
 	t := &translator{
-		dir:        dir,
-		fileType:   fileType,
+		config:     config,
 		translates: make(map[string]map[string]string),
 	}
-	if len(t.dir) == 0 {
+	if len(t.config.Dir) == 0 {
 		return t
 	}
-	if _, err := os.Stat(t.dir); os.IsNotExist(err) {
+	if _, err := os.Stat(t.config.Dir); os.IsNotExist(err) {
 		panic(ErrorInvalidDir)
 	}
 	err := t.walk()
@@ -62,18 +60,18 @@ func (t *translator) Translate(langCode, key string, args ...map[string]any) str
 
 func (t *translator) walk() error {
 	if err := filepath.Walk(
-		t.dir, func(path string, info fs.FileInfo, err error) error {
+		t.config.Dir, func(path string, info fs.FileInfo, err error) error {
 			if info.IsDir() {
 				return nil
 			}
-			if !strings.HasSuffix(info.Name(), "."+t.fileType) {
+			if !strings.HasSuffix(info.Name(), "."+t.config.FileType) {
 				return nil
 			}
-			lang := strings.TrimSuffix(info.Name(), "."+t.fileType)
+			lang := strings.TrimSuffix(info.Name(), "."+t.config.FileType)
 			if t.translates[lang] == nil {
 				t.translates[lang] = make(map[string]string)
 			}
-			dir := strings.TrimPrefix(t.dir, "./")
+			dir := strings.TrimPrefix(t.config.Dir, "./")
 			subpath := strings.TrimPrefix(strings.TrimSuffix(path, info.Name()), dir)
 			subpath = strings.TrimPrefix(subpath, "/")
 			subpath = strings.TrimSuffix(subpath, "/")
@@ -94,7 +92,7 @@ func (t *translator) read(lang, path, prefix string) error {
 		return err
 	}
 	fileData := make(map[string]any)
-	switch t.fileType {
+	switch t.config.FileType {
 	case Json:
 		if err := json.Unmarshal(fileBytes, &fileData); err != nil {
 			return err

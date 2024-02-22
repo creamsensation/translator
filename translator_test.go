@@ -23,7 +23,7 @@ func TestTranslator(t *testing.T) {
 					os.ModePerm,
 				),
 			)
-			translator := New(translatesDir, Yaml)
+			translator := New(Config{translatesDir, Yaml})
 			assert.Equal(t, "E-mail", translator.Translate("en", "label.email"))
 			assert.Equal(t, "Name", translator.Translate("en", "label.name"))
 		},
@@ -41,7 +41,7 @@ func TestTranslator(t *testing.T) {
 					os.ModePerm,
 				),
 			)
-			translator := New(translatesDir, Yaml)
+			translator := New(Config{translatesDir, Yaml})
 			assert.Equal(t, "E-mail", translator.Translate("en", "global.label.email"))
 			assert.Equal(t, "Name", translator.Translate("en", "global.label.name"))
 		},
